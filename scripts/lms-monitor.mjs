@@ -53,8 +53,13 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     if (!response.ok) throw new Error(`Supabase ${table}: ${response.status} ${await response.text()}`);
   };
   const owner = process.env.AI_OWNER_ID || "primary";
-  await post("lms_tasks", (snapshot.tasks||[]).map(t => ({ owner_id:owner, external_id:String(t.id), course:t.course, title:t.title, url:t.url, due_at:t.dueAt, grade:t.grade, passing_grade:t.passingGrade, status:t.status, raw:t })));
+  await post("lms_tasks", (snapshot.tasks||[]).map(t => ({ owner_id:owner, external_id:String(t.id), course:t.course, title:t.title, url:t.url, due_at:t.dueAt, grade:t.grade, passing_grade:t.passingGrade, status:t.status, is_active:true, raw:t })));
   await post("lms_events", events.map(e => ({ owner_id:owner, event_type:e.type, external_id:String(e.task?.id || ""), payload:e, created_at:e.at })));
+  for (const event of events.filter(e => e.type === "TASK_REMOVED" && e.task?.id)) {
+    const id = encodeURIComponent(String(event.task.id));
+    const response = await fetch(`${process.env.SUPABASE_URL}/rest/v1/lms_tasks?owner_id=eq.${encodeURIComponent(owner)}&external_id=eq.${id}`, { method:"PATCH", headers, body:JSON.stringify({ is_active:false }) });
+    if (!response.ok) throw new Error(`Supabase lms_tasks deactivate: ${response.status} ${await response.text()}`);
+  }
   await post("lms_sync_status", [{ owner_id:owner, last_sync_at:state.lastSyncAt, course_count:state.courseCount, task_count:state.taskCount, error:null }]);
   await post("agent_reminders", reminders.map(r => ({ owner_id:owner, source:"lms", source_key:`${r.taskId}:${r.daysBefore}`, title:`${r.title} — ${r.daysBefore} kun qoldi`, details:`Topshiriq muddati: ${r.dueAt}`, remind_at:r.remindAt, timezone:"Asia/Tashkent", channel:"push", status:"scheduled" })));
   console.log("[worker] Supabase bilan sinxronlandi");
