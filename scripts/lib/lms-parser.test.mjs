@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { clean, dateFromText, inferTaskStatus } from "./lms-parser.mjs";
 
 test("clean collapses whitespace", () => {
-  assert.equal(clean("  Algebra\\n  topshiriq  "), "Algebra topshiriq");
+  assert.equal(clean("  Algebra\n  topshiriq  "), "Algebra topshiriq");
 });
 
 test("dateFromText parses Tashkent local date and time", () => {
