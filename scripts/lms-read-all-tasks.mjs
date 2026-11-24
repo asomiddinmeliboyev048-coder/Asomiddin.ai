@@ -31,7 +31,8 @@ try{
    }).filter(x=>x.text&&(/\/mod\/assign\/view\.php|assignment|topshiriq|vazifa/i.test(x.href+" "+x.text+" "+x.context))));
    for(const item of found){
     const id=item.href||title+":"+item.text;
-    if(taskIds.has(id))continue;\n    taskIds.add(id);
+    if(taskIds.has(id))continue;
+    taskIds.add(id);
     let dueAt=normalizeDateTime(item.time) || dateFromText(item.context);
     const status=inferTaskStatus(item.context,dueAt);
     tasks.push({id,course:title,title:item.text,url:item.href,dueAt,grade:null,passingGrade:null,status,source:"lms-dom",rawContext:item.context});
