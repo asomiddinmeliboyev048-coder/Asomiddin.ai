@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const owner = process.env.AI_OWNER_ID || "primary";
   const [status, tasks, events] = await Promise.all([
     db.from("lms_sync_status").select("*").eq("owner_id",owner).maybeSingle(),
-    db.from("lms_tasks").select("external_id,course,title,url,due_at,grade,passing_grade,status,updated_at").eq("owner_id",owner).order("due_at",{ascending:true,nullsFirst:false}).limit(100),
+    db.from("lms_tasks").select("external_id,course,title,url,due_at,grade,passing_grade,status,updated_at").eq("owner_id",owner).eq("is_active",true).order("due_at",{ascending:true,nullsFirst:false}).limit(100),
     db.from("lms_events").select("event_type,payload,created_at").eq("owner_id",owner).order("created_at",{ascending:false}).limit(30)
   ]);
   const error = status.error || tasks.error || events.error;
