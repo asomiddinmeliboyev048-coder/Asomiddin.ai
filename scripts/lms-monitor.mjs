@@ -20,13 +20,15 @@ if (Object.keys(old).length > 0 && !(snapshot.tasks || []).length && process.env
   throw new Error("LMS 0 ta topshiriq qaytardi, oldingi monitoringda esa topshiriqlar bor. Noto‘g‘ri TASK_REMOVED hodisalarini oldini olish uchun sync bekor qilindi. Haqiqatan bo‘sh ro‘yxat kutilsa LMS_ALLOW_EMPTY_TASKS=true ni belgilang.");
 }
 const current = Object.fromEntries((snapshot.tasks || []).map(t => [String(t.id), t]));
+const incomplete = (snapshot.warnings || []).length > 0;
+if (incomplete) for (const [id, task] of Object.entries(old)) if (!current[id]) current[id] = task;
 const events = [];
 for (const [id, task] of Object.entries(current)) {
   if (!old[id]) events.push({ type: "NEW_TASK", task, at: new Date().toISOString() });
   else if (old[id].dueAt !== task.dueAt) events.push({ type: "DEADLINE_CHANGED", task, before: old[id].dueAt, at: new Date().toISOString() });
   else if (old[id].title !== task.title || old[id].status !== task.status) events.push({ type: "TASK_UPDATED", task, at: new Date().toISOString() });
 }
-for (const [id, task] of Object.entries(old)) if (!current[id]) events.push({ type: "TASK_REMOVED", task, at: new Date().toISOString() });
+if (!incomplete) for (const [id, task] of Object.entries(old)) if (!current[id]) events.push({ type: "TASK_REMOVED", task, at: new Date().toISOString() });
 const history = await read("monitor-history.json", []);
 history.push(...events);
 const reminders = (snapshot.tasks || []).flatMap(task => {
@@ -35,7 +37,7 @@ const reminders = (snapshot.tasks || []).flatMap(task => {
   if (Number.isNaN(due.getTime())) return [];
   return [5,4].map(days => ({ taskId: task.id, title: task.title, dueAt: task.dueAt, daysBefore: days, remindAt: new Date(due.getTime()-days*86400000).toISOString() }));
 });
-const state = { lastSyncAt: new Date().toISOString(), tasks: current, courseCount: (snapshot.courses||[]).length, taskCount: Object.keys(current).length };
+const state = { lastSyncAt: new Date().toISOString(), tasks: current, courseCount: (snapshot.courses||[]).length, taskCount: Object.keys(current).length, warnings: snapshot.warnings || [] };
 await Promise.all([
   fs.writeFile(path.join(dir,"monitor-state.json"),JSON.stringify(state,null,2)),
   fs.writeFile(path.join(dir,"monitor-history.json"),JSON.stringify(history.slice(-1000),null,2)),
