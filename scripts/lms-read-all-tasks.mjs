@@ -1,7 +1,7 @@
 import { chromium } from "playwright";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { clean, dateFromText, inferTaskStatus } from "./lib/lms-parser.mjs";
+import { clean, dateFromText, inferTaskStatus, normalizeDateTime } from "./lib/lms-parser.mjs";
 const base=process.env.LMS_DATA_DIR||process.cwd();
 const authPath=path.join(base,".auth","lms-storage-state.json");
 const outDir=path.join(base,".local","lms");
@@ -11,7 +11,7 @@ const context=await browser.newContext({storageState:authPath,timezoneId:"Asia/T
 const page=await context.newPage();
 const origin=process.env.LMS_URL||"https://lms.tuit.uz";
 const maxPages=Number(process.env.LMS_MAX_COURSES||50);
-const courses=[]; const tasks=[]; const visited=new Set();
+const courses=[]; const tasks=[]; const taskIds=new Set(); const visited=new Set();
 try{
  await page.goto(origin,{waitUntil:"domcontentloaded",timeout:60000});
  if(/login|oneid/i.test(page.url())||await page.locator('input[type="password"]').count())throw new Error("LMS sessiyasi yaroqsiz yoki tugagan. npm run lms:login orqali qo‘lda qayta kiring.");
@@ -31,8 +31,8 @@ try{
    }).filter(x=>x.text&&(/\/mod\/assign\/view\.php|assignment|topshiriq|vazifa/i.test(x.href+" "+x.text+" "+x.context))));
    for(const item of found){
     const id=item.href||title+":"+item.text;
-    if(tasks.some(t=>t.id===id))continue;
-    let dueAt=item.time?new Date(item.time).toISOString():dateFromText(item.context);
+    if(taskIds.has(id))continue;\n    taskIds.add(id);
+    let dueAt=normalizeDateTime(item.time) || dateFromText(item.context);
     const status=inferTaskStatus(item.context,dueAt);
     tasks.push({id,course:title,title:item.text,url:item.href,dueAt,grade:null,passingGrade:null,status,source:"lms-dom",rawContext:item.context});
    }
