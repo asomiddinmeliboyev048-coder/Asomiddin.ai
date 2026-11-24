@@ -7,7 +7,7 @@ const empty:Snapshot={configured:false,tasks:[],events:[]};
 const date=(v?:string|null)=>v?new Intl.DateTimeFormat("uz-UZ",{dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Tashkent"}).format(new Date(v)):"LMS ma’lumotida yo‘q";
 export default function Dashboard(){
  const [data,setData]=useState<Snapshot>(empty),[loading,setLoading]=useState(true),[now,setNow]=useState("");
- const load=useCallback(async()=>{setLoading(true);try{const r=await fetch("/api/lms/status",{cache:"no-store"});setData(await r.json());}catch{setData({...empty,error:"Server bilan aloqa yo‘q"});}finally{setLoading(false);}},[]);
+ const load=useCallback(async()=>{setLoading(true);try{const r=await fetch("/api/lms/status",{cache:"no-store"});if(r.status===401){location.href="/login";return;}setData(await r.json());}catch{setData({...empty,error:"Server bilan aloqa yo‘q"});}finally{setLoading(false);}},[]);
  useEffect(()=>{void load();setNow(new Intl.DateTimeFormat("uz-UZ",{dateStyle:"full",timeZone:"Asia/Tashkent"}).format(new Date()));},[load]);
  const upcoming=useMemo(()=>data.tasks.filter(t=>t.due_at&&new Date(t.due_at).getTime()>=Date.now()).slice(0,5),[data.tasks]);
  const overdue=data.tasks.filter(t=>t.due_at&&new Date(t.due_at).getTime()<Date.now()).length;
