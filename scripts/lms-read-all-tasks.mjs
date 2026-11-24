@@ -39,7 +39,7 @@ try{
    }
   }catch(error){courseErrors.push({course:link.text,error:error.message});console.warn("Kurs o‘qilmadi:",link.href,error.message);}
  }
- const payload={capturedAt:new Date().toISOString(),source:origin,courses,tasks,warnings:[...(courseLinks.length?[]:["Moodle course view havolalari topilmadi. LMS sahifa tuzilmasini tekshirish kerak."]),...courseErrors.map(e=>`Kurs o‘qilmadi: ${e.course} — ${e.error}`)]};
+ const payload={capturedAt:new Date().toISOString(),source:origin,courses,tasks,warnings:[...(courseLinks.length?[]:["Moodle course view havolalari topilmadi. LMS sahifa tuzilmasini tekshirish kerak."]),...(courseLinks.length>maxPages?[`Kurslar soni ${maxPages} limitidan oshdi; qolgan kurslar o‘qilmadi.`]:[]),...courseErrors.map(e=>`Kurs o‘qilmadi: ${e.course} — ${e.error}`)]};
  await fs.writeFile(path.join(outDir,"all-course-tasks.json"),JSON.stringify(payload,null,2));
  console.log(`LMS: ${courses.length} kurs, ${tasks.length} topshiriq`);
  if(!courses.length)console.warn("Kurslar topilmadi; parserni LMS HTML tuzilmasiga moslash zarur.");
