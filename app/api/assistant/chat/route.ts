@@ -5,7 +5,7 @@ export const runtime="nodejs";
 const schema=z.object({message:z.string().min(1).max(5000),history:z.array(z.object({role:z.enum(["user","assistant"]),content:z.string().max(5000)})).max(12).default([])});
 export async function POST(req:NextRequest){
  const session=req.cookies.get("asomiddin_session")?.value;
- if(!process.env.APP_SESSION_TOKEN||session!==process.env.APP_SESSION_TOKEN)return NextResponse.json({error:"Avval tizimga kiring."},{status:401});
+ if(process.env.APP_AUTH_DISABLED!=="true"&&(!process.env.APP_SESSION_TOKEN||session!==process.env.APP_SESSION_TOKEN))return NextResponse.json({error:"Avval tizimga kiring."},{status:401});
  const parsed=schema.safeParse(await req.json().catch(()=>null));
  if(!parsed.success)return NextResponse.json({error:"Xabar formati noto‘g‘ri."},{status:400});
  if(!process.env.OPENAI_API_KEY)return NextResponse.json({error:"OPENAI_API_KEY sozlanmagan. Vercel Environment Variables bo‘limiga kiriting."},{status:503});
