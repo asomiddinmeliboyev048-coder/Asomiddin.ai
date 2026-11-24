@@ -7,7 +7,11 @@ export function dateFromText(value = "") {
   const [day, month, rawYear, hour = 23, minute = 59] = parts;
   const year = rawYear < 100 ? rawYear + 2000 : rawYear;
   if (month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || minute > 59) return null;
-  const iso = "${String(year).padStart(4,"0")}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}T${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}:00+05:00";
+  const iso = String(year).padStart(4, "0") + "-" +
+    String(month).padStart(2, "0") + "-" +
+    String(day).padStart(2, "0") + "T" +
+    String(hour).padStart(2, "0") + ":" +
+    String(minute).padStart(2, "0") + ":00+05:00";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return null;
   const check = new Date(Date.UTC(year, month - 1, day));
