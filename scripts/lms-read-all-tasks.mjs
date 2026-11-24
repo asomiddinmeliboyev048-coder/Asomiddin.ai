@@ -21,7 +21,7 @@ try {
   if (/login|oneid/i.test(page.url()) || await page.locator('input[type="password"]').count()) {
     throw new Error("LMS sessiyasi yaroqsiz yoki muddati tugagan. scripts/lms-login.mjs orqali qayta kiring.");
   }
-  const links = await page.locator('a[href]').evaluateAll(as => as.map(a => ({ text: clean(a.innerText), href: a.href })).filter(x => x.href.startsWith(origin) && x.text));
+  const links = await page.locator('a[href]').evaluateAll(as => as.map(a => ({ text: (a.innerText || "").replace(/\\s+/g, " ").trim(), href: a.href })).filter(x => x.href.startsWith(origin) && x.text));
   const courseLinks = links.filter(x => /course|kurs|mod|fan/i.test(x.href + " " + x.text)).slice(0, maxPages);
   for (const link of courseLinks) {
     if (visited.has(link.href)) continue;
