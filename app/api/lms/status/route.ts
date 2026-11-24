@@ -1,11 +1,19 @@
 import { NextResponse } from "next/server";
-import fs from "node:fs/promises";
-import path from "node:path";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function GET() {
-  const base = path.join(process.env.LMS_DATA_DIR || process.cwd(), ".local", "lms");
-  const read = async (name: string) => { try { return JSON.parse(await fs.readFile(path.join(base, name), "utf8")); } catch { return null; } };
-  const [state, tasks, reminders] = await Promise.all([read("monitor-state.json"), read("all-course-tasks.json"), read("reminders.json")]);
-  return NextResponse.json({ configured: Boolean(state || tasks), lastSync: state?.lastSyncAt ?? state?.last_sync_at ?? null, taskCount: Array.isArray(tasks?.tasks) ? tasks.tasks.length : Array.isArray(tasks) ? tasks.length : null, reminderCount: Array.isArray(reminders) ? reminders.length : Array.isArray(reminders?.reminders) ? reminders.reminders.length : null, note: "LMS operational files are available only on the worker host; configure a shared database for dashboard access." });
+  const db = getSupabaseAdmin();
+  if (!db) return NextResponse.json({ configured:false, lastSync:null, tasks:[], events:[], error:"Supabase server env sozlanmagan." }, { status:200 });
+  const owner = process.env.AI_OWNER_ID || "primary";
+  const [status, tasks, events] = await Promise.all([
+    db.from("lms_sync_status").select("*").eq("owner_id",owner).maybeSingle(),
+    db.from("lms_tasks").select("external_id,course,title,url,due_at,grade,passing_grade,status,updated_at").eq("owner_id",owner).order("due_at",{ascending:true,nullsFirst:false}).limit(100),
+    db.from("lms_events").select("event_type,payload,created_at").eq("owner_id",owner).order("created_at",{ascending:false}).limit(30)
+  ]);
+  const error = status.error || tasks.error || events.error;
+  if (error) return NextResponse.json({ configured:true, error:error.message, tasks:[], events:[] }, { status:500 });
+  return NextResponse.json({ configured:true, lastSync:status.data?.last_sync_at || null, courseCount:status.data?.course_count ?? 0, taskCount:status.data?.task_count ?? 0, tasks:tasks.data || [], events:events.data || [] });
 }
