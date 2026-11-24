@@ -1,0 +1,14 @@
+services:
+  lms-worker:
+    build: .
+    container_name: asomiddin-ai-lms-worker
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      LMS_SYNC_INTERVAL_MS: "21600000"
+      LMS_DATA_DIR: /app
+      TZ: Asia/Tashkent
+    volumes:
+      - ./.auth:/app/.auth
+      - ./.local:/app/.local
