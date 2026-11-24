@@ -13,6 +13,7 @@ const run = () => new Promise((resolve, reject) => {
 const read = async (name, fallback) => { try { return JSON.parse(await fs.readFile(path.join(dir, name), "utf8")); } catch { return fallback; } };
 await run();
 const snapshot = await read("all-course-tasks.json", { capturedAt: new Date().toISOString(), courses: [], tasks: [] });
+if (!(snapshot.courses || []).length) throw new Error("LMS kurslari topilmadi; mavjud monitoring holati saqlab qolindi.");
 const previous = await read("monitor-state.json", { tasks: {} });
 const old = previous.tasks || {};
 const current = Object.fromEntries((snapshot.tasks || []).map(t => [String(t.id), t]));
@@ -39,10 +40,10 @@ await Promise.all([
 ]);
 console.log(`Monitor: ${state.courseCount} kurs, ${state.taskCount} topshiriq, ${events.length} o'zgarish`);
 if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  const headers = { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`, "Content-Type":"application/json", Prefer:"resolution=merge-duplicates" };
+  const headers = { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`, "Content-Type":"application/json", Prefer:"resolution=merge-duplicates,return=minimal" };
   const post = async (table, rows) => {
     if (!rows.length) return;
-    const conflict = table === "lms_tasks" ? "?on_conflict=owner_id,external_id" : table === "lms_sync_status" ? "?on_conflict=owner_id" : "";
+    const conflict = table === "lms_tasks" ? "?on_conflict=owner_id,external_id" : table === "lms_sync_status" ? "?on_conflict=owner_id" : table === "agent_reminders" ? "?on_conflict=owner_id,source_key" : "";
     const response = await fetch(`${process.env.SUPABASE_URL}/rest/v1/${table}${conflict}`, { method:"POST", headers, body:JSON.stringify(rows) });
     if (!response.ok) throw new Error(`Supabase ${table}: ${response.status} ${await response.text()}`);
   };
@@ -50,5 +51,6 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
   await post("lms_tasks", (snapshot.tasks||[]).map(t => ({ owner_id:owner, external_id:String(t.id), course:t.course, title:t.title, url:t.url, due_at:t.dueAt, grade:t.grade, passing_grade:t.passingGrade, status:t.status, raw:t })));
   await post("lms_events", events.map(e => ({ owner_id:owner, event_type:e.type, external_id:String(e.task?.id || ""), payload:e, created_at:e.at })));
   await post("lms_sync_status", [{ owner_id:owner, last_sync_at:state.lastSyncAt, course_count:state.courseCount, task_count:state.taskCount, error:null }]);
+  await post("agent_reminders", reminders.map(r => ({ owner_id:owner, source:"lms", source_key:`${r.taskId}:${r.daysBefore}`, title:`${r.title} — ${r.daysBefore} kun qoldi`, details:`Topshiriq muddati: ${r.dueAt}`, remind_at:r.remindAt, timezone:"Asia/Tashkent", channel:"push", status:"scheduled" })));
   console.log("[worker] Supabase bilan sinxronlandi");
 } else console.warn("[worker] Supabase env yo'q; ma'lumotlar hozircha faqat worker diskida saqlanadi.");
