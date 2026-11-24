@@ -40,7 +40,10 @@ try{
     const id=item.href||title+":"+item.text;
     if(tasks.some(t=>t.id===id))continue;
     let dueAt=item.time?new Date(item.time).toISOString():dateFromText(item.context);
-    const submitted=/submitted|отправлено|topshirildi|yuborildi/i.test(item.context);\n    const graded=/graded|оценено|baholandi|baholangan/i.test(item.context);\n    const status=graded?"graded":submitted?"submitted":dueAt&&new Date(dueAt).getTime()<Date.now()?"overdue":dueAt?"upcoming":"unknown";\n    tasks.push({id,course:title,title:item.text,url:item.href,dueAt,grade:null,passingGrade:null,status,source:"lms-dom",rawContext:item.context});
+    const submitted=/submitted|отправлено|topshirildi|yuborildi/i.test(item.context);
+    const graded=/graded|оценено|baholandi|baholangan/i.test(item.context);
+    const status=graded?"graded":submitted?"submitted":dueAt&&new Date(dueAt).getTime()<Date.now()?"overdue":dueAt?"upcoming":"unknown";
+    tasks.push({id,course:title,title:item.text,url:item.href,dueAt,grade:null,passingGrade:null,status,source:"lms-dom",rawContext:item.context});
    }
   }catch(error){console.warn("Kurs o‘qilmadi:",link.href,error.message);}
  }
