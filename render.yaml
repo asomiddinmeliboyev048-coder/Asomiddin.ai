@@ -1,0 +1,18 @@
+services:
+  - type: worker
+    name: asomiddin-ai-lms-worker
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LMS_SYNC_INTERVAL_MS
+        value: "21600000"
+      - key: LMS_DATA_DIR
+        value: /data
+    disk:
+      name: asomiddin-ai-data
+      mountPath: /data
+      sizeGB: 1
