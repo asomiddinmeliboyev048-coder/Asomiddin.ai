@@ -32,7 +32,7 @@ try {
       const body = await page.locator("body").innerText().catch(() => "");
       courses.push({ title, url: link.href });
       const rows = await page.locator('a[href], li, tr, .activity, .activity-item, .course-section').evaluateAll(els => els.map(el => {
-        const text = clean(el.innerText);
+        const text = (el.innerText || "").replace(/\\s+/g, " ").trim();
         const a = el.matches("a") ? el : el.querySelector("a[href]");
         return { title: text.slice(0, 500), url: a?.href || "", tag: el.tagName.toLowerCase() };
       }).filter(x => x.title && /task|assignment|topshiriq|vazifa|deadline|due|muddat/i.test(x.title)));
