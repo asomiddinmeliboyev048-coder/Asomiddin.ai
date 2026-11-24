@@ -5,7 +5,7 @@
 2. Set `APP_ACCESS_PASSWORD` to a strong private password.
 3. Set `APP_SESSION_TOKEN` to a cryptographically random secret of at least 32 bytes. Keep it private.
 4. Set `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` for server-side data access. The service-role key must never use a `NEXT_PUBLIC_` prefix.
-5. Set `AI_OWNER_ID=primary`.
+5. Set `AI_OWNER_ID=primary` and `OPENAI_API_KEY` (optionally `OPENAI_MODEL`). The key stays server-side and powers the dashboard text assistant; browser speech input/output uses the device's supported Web Speech APIs.
 6. Apply every SQL migration in `supabase/migrations/` to the Supabase project.
 7. Deploy and verify `/api/health`; open `/login` and sign in with the private password.
 
