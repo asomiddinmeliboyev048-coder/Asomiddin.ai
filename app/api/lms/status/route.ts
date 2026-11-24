@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const session = request.headers.get("cookie")?.split(";").map(v=>v.trim()).find(v=>v.startsWith("asomiddin_session="))?.slice("asomiddin_session=".length);
-  if (!process.env.APP_SESSION_TOKEN || session !== process.env.APP_SESSION_TOKEN) return NextResponse.json({ error:"Unauthorized" }, { status:401 });
+  if (process.env.APP_AUTH_DISABLED !== "true" && (!process.env.APP_SESSION_TOKEN || session !== process.env.APP_SESSION_TOKEN)) return NextResponse.json({ error:"Unauthorized" }, { status:401 });
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ configured:false, lastSync:null, tasks:[], events:[], error:"Supabase server env sozlanmagan." }, { status:200 });
   const owner = process.env.AI_OWNER_ID || "primary";
