@@ -30,7 +30,7 @@ A personal AI assistant and TATU LMS companion for web and Android.
 
 ## Status
 
-This repository is being initialized from the requirements and implementation notes available in the development conversation. Existing local project code must be reconciled before replacing it.
+Current implementation status: the web dashboard, private password login, LMS monitoring worker, parser tests, Supabase schemas, text assistant endpoint, browser speech input/output and manual reminder management are present. LMS extraction still needs validation against an authenticated TATU account. Push delivery, real-time duplex voice, telephony routing and Android-to-server integration are not yet connected. No production deployment or device-level validation is claimed.
 
 ## Milestones
 
