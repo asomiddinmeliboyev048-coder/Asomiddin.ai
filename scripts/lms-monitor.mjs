@@ -42,7 +42,7 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
   const headers = { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`, "Content-Type":"application/json", Prefer:"resolution=merge-duplicates" };
   const post = async (table, rows) => {
     if (!rows.length) return;
-    const response = await fetch(`${process.env.SUPABASE_URL}/rest/v1/${table}`, { method:"POST", headers, body:JSON.stringify(rows) });
+    const conflict = table === "lms_tasks" ? "?on_conflict=owner_id,external_id" : table === "lms_sync_status" ? "?on_conflict=owner_id" : "";\n    const response = await fetch(`${process.env.SUPABASE_URL}/rest/v1/${table}${conflict}`, { method:"POST", headers, body:JSON.stringify(rows) });
     if (!response.ok) throw new Error(`Supabase ${table}: ${response.status} ${await response.text()}`);
   };
   const owner = process.env.AI_OWNER_ID || "primary";
