@@ -27,7 +27,7 @@ export function normalizeDateTime(value) {
 
 export function inferTaskStatus(context = "", dueAt = null, now = Date.now()) {
   if (/graded|оценено|baholandi|baholangan/i.test(context)) return "graded";
-  if (/(?:not\\s+submitted|не\\s+отправлено|topshirilmagan|yuborilmagan)/i.test(context)) return dueAt ? inferTaskStatus("", dueAt, now) : "not_submitted";
+  if (/(?:not\s+submitted|не\s+отправлено|topshirilmagan|yuborilmagan)/i.test(context)) return dueAt ? inferTaskStatus("", dueAt, now) : "not_submitted";
   if (/submitted|отправлено|topshirildi|yuborildi/i.test(context)) return "submitted";
   if (!dueAt) return "unknown";
   const timestamp = new Date(dueAt).getTime();
