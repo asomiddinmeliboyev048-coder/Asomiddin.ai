@@ -16,6 +16,9 @@ const snapshot = await read("all-course-tasks.json", { capturedAt: new Date().to
 if (!(snapshot.courses || []).length) throw new Error("LMS kurslari topilmadi; mavjud monitoring holati saqlab qolindi.");
 const previous = await read("monitor-state.json", { tasks: {} });
 const old = previous.tasks || {};
+if (Object.keys(old).length > 0 && !(snapshot.tasks || []).length && process.env.LMS_ALLOW_EMPTY_TASKS !== "true") {
+  throw new Error("LMS 0 ta topshiriq qaytardi, oldingi monitoringda esa topshiriqlar bor. Noto‘g‘ri TASK_REMOVED hodisalarini oldini olish uchun sync bekor qilindi. Haqiqatan bo‘sh ro‘yxat kutilsa LMS_ALLOW_EMPTY_TASKS=true ni belgilang.");
+}
 const current = Object.fromEntries((snapshot.tasks || []).map(t => [String(t.id), t]));
 const events = [];
 for (const [id, task] of Object.entries(current)) {
