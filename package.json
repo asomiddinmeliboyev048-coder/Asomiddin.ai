@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "worker": "node worker/runner.mjs",
     "lms:login": "node scripts/lms-login.mjs",
-    "lms:sync": "node scripts/lms-monitor.mjs"
+    "lms:sync": "node scripts/lms-monitor.mjs",
+    "test": "node --test"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
