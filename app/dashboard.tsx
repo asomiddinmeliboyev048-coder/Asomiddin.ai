@@ -6,13 +6,13 @@ import RemindersPanel from "./reminders-panel";
 type Task={external_id:string;course?:string;title:string;url?:string|null;due_at?:string|null;grade?:number|null;passing_grade?:number|null;status?:string};
 type Snapshot={configured:boolean;lastSync?:string|null;courseCount?:number;taskCount?:number;tasks:Task[];events:{event_type:string;created_at:string;payload:any}[];error?:string};
 const empty:Snapshot={configured:false,tasks:[],events:[]};
-const date=(v?:string|null)=>v?new Intl.DateTimeFormat("uz-UZ",{dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Tashkent"}).format(new Date(v)):"LMS ma’lumotida yo‘q";
+const date=(v?:string|null)=>{if(!v)return "LMS ma’lumotida yo‘q";const d=new Date(v);return Number.isNaN(d.getTime())?"Sana noto‘g‘ri":new Intl.DateTimeFormat("uz-UZ",{dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Tashkent"}).format(d)};
 export default function Dashboard(){
  const [data,setData]=useState<Snapshot>(empty),[loading,setLoading]=useState(true),[now,setNow]=useState("");
  const load=useCallback(async()=>{setLoading(true);try{const r=await fetch("/api/lms/status",{cache:"no-store"});if(r.status===401){location.href="/login";return;}setData(await r.json());}catch{setData({...empty,error:"Server bilan aloqa yo‘q"});}finally{setLoading(false);}},[]);
  useEffect(()=>{void load();setNow(new Intl.DateTimeFormat("uz-UZ",{dateStyle:"full",timeZone:"Asia/Tashkent"}).format(new Date()));},[load]);
- const upcoming=useMemo(()=>data.tasks.filter(t=>t.due_at&&new Date(t.due_at).getTime()>=Date.now()).slice(0,5),[data.tasks]);
- const overdue=data.tasks.filter(t=>t.due_at&&new Date(t.due_at).getTime()<Date.now()).length;
+ const upcoming=useMemo(()=>data.tasks.filter(t=>t.due_at&&new Date(t.due_at).getTime()>=Date.now()&&!["submitted","graded","not_submitted"].includes(t.status||"")).slice(0,5),[data.tasks]);
+ const overdue=data.tasks.filter(t=>t.status==="overdue"||(t.due_at&&new Date(t.due_at).getTime()<Date.now()&&!["submitted","graded"].includes(t.status||""))).length;
  return <main className="shell"><header className="topbar"><a className="brand" href="/">ASOMIDDIN<span style={{color:"#a78bfa"}}>.AI</span></a><div className="top-actions"><span className="status"><i className="dot"/> Shaxsiy AI markazi</span><button className="refresh" onClick={async()=>{await fetch("/api/auth/login",{method:"DELETE"});location.href="/login";}}>Chiqish</button></div></header>
  <section className="hero"><div><div className="eyebrow">PERSONAL AI COMMAND CENTER</div><h1>Assalomu alaykum, Asomiddin!</h1><p className="muted">{now} · O‘qish, reja va kundalik ishlaringiz bir joyda.</p></div><button className="refresh" onClick={()=>void load()} disabled={loading}><RefreshCw size={16}/>{loading?"Yuklanmoqda":"Yangilash"}</button></section>
  {data.error&&<div className="notice">{data.error}</div>}
